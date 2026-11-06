@@ -28,7 +28,7 @@ function GuessGame() {
     return (
       <div className="enter">
         <p className="big-num">{score} / {QUIZ.length} 🎯</p>
-        <p>You're a next-word guesser! Toki plays <b>this exact game</b>, billions of times, on all of that internet text.</p>
+        <p>You're a next-bead guesser! Toki plays <b>this exact game</b>, billions of times, on all of that internet text.</p>
         <button className="btn small ghost" onClick={() => { setI(0); setScore(0) }}>Play again</button>
       </div>
     )
@@ -40,7 +40,7 @@ function GuessGame() {
   }
   return (
     <>
-      <p className="muted">Round {i + 1} of {QUIZ.length}: what comes next?</p>
+      <p className="muted">Round {i + 1} of {QUIZ.length}: which bead comes next? (Here each bead is a whole word.)</p>
       <div className="bubble" style={{ fontSize: '1.2rem', fontWeight: 700 }}>
         {q.text.replace('___', '')}<span style={{ color: 'var(--accent)' }}>{picked ? picked : '___'}</span>
       </div>
@@ -147,51 +147,94 @@ export default function Training() {
   const quality = p && info ? Math.max(0, 1 - p.loss / info.loss) : 0
 
   return (
-    <Chapter num={3} title="The Guessing Game" sub="Training = guessing the next piece, over and over"
-      story={<>
-        <div className="card">
-          <Explain
+    <Chapter title="The Guessing Game" sub="Training = guessing the next piece, over and over"
+      steps={[
+        {
+          title: '🤫 Toki\'s big secret',
+          body: <Explain
             kid={<>
-              <p>Here's the big secret: Toki learns by playing <b>one game</b> — <i>“guess the next piece of text!”</i></p>
-              <p>Every time Toki guesses wrong, it twists its <b>knobs</b> 🎛️ a tiny bit so the right answer becomes more likely next time. Do that billions of times and Toki gets really good!</p>
+              <p>Toki learns by playing just <b>one game</b>, over and over: <i>“look at some beads, then guess the next bead!”</i> That's the whole trick!</p>
+              <p>Toki looks through a <b>window</b> of the beads that came before. Big models can look at thousands of beads at once.</p>
+            </>}
+            curious={<p>A neural network takes a window of tokens (the <b>context</b>, up to thousands of tokens) and outputs a probability for every one of the ~200,000 possible next tokens. Training is just getting better at this one prediction task.</p>}
+          />,
+          next: 'Let me play!',
+        },
+        {
+          title: '🎯 You try first!',
+          body: <GuessGame />,
+          next: 'How does Toki get better?',
+        },
+        {
+          title: '🎛️ Turning the knobs',
+          body: <Explain
+            kid={<>
+              <p>Inside Toki are lots of <b>knobs</b>, like on a DJ's music board (see the box 👉). Each knob is a number, and the knobs decide Toki's guesses.</p>
+              <p>At first the knobs are set <b>randomly</b>, so Toki's guesses are nonsense. After <b>every</b> guess, each knob gets nudged a tiny bit so the right bead becomes a little more likely next time.</p>
             </>}
             curious={<>
-              <p>A neural network takes a window of tokens (the <b>context</b>) and outputs a probability for every possible next token. The <b>loss</b> measures how surprised it was by the real next token.</p>
-              <p>Training nudges all the <b>parameters</b> (the knobs) slightly downhill on the loss, batch after batch. Big models do this on ~15 trillion tokens with hundreds of billions of parameters, for months, on thousands of GPUs.</p>
+              <p>The knobs are the network's <b>parameters</b>. The <b>loss</b> measures how surprised the model was by the real next token.</p>
+              <p>Training nudges every parameter slightly in the direction that lowers the loss (gradient descent), batch after batch.</p>
             </>}
-          />
-        </div>
-        <div className="card tilt-l"><h3>🎯 You try first!</h3><GuessGame /></div>
-        <div className="card tilt-r">
-          <h3>🧪 Now watch a real baby AI learn</h3>
-          <p className="muted">This tiny network reads 6 letters and guesses the 7th. It has <b>{info ? info.params.toLocaleString() : '…'}</b> knobs and trains right here in your browser on a few little stories.</p>
-          <div className="btn-row">
-            {p?.done ? <span className="sticker" style={{ background: 'var(--mint)' }}>✓ Trained!</span> : !running ? <button className="btn mint" onClick={start} disabled={!info}>{p && p.step > 0 ? '▶ Keep training' : '▶ Start training'}</button>
-              : <button className="btn" onClick={pause}>⏸ Pause</button>}
-            <button className="btn ghost small" onClick={reset}>↺ Reset</button>
-            <span className="tag">step {p?.step ?? 0} / 1500</span>
-          </div>
-          <div style={{ marginTop: 12 }}><LossChart points={points} start={info?.loss ?? 3.4} /></div>
-          <h4 style={{ marginTop: 12 }}>What it writes 👇</h4>
-          <div style={{ display: 'grid', gap: 8 }}>
-            {samples.map((s) => (
-              <div key={s.step} className="bubble toki enter" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '.9rem' }}>
-                <span className="tag">step {s.step}</span> {s.text}
+          />,
+          next: 'Watch a baby AI learn',
+        },
+        {
+          title: '🧪 Watch a real baby AI learn',
+          body: <>
+            <p className="muted">This tiny network trains right here in your browser on a few little stories. To stay tiny, it uses <b>single letters as its beads</b> (about 30 kinds instead of 200,000) and looks through a window of <b>6 letters</b> to guess the 7th. It has <b>{info ? info.params.toLocaleString() : '…'}</b> knobs.</p>
+            <p className="muted">Watch step 0: random knobs write nonsense. Then watch it get better!</p>
+            <div className="btn-row">
+              {p?.done ? <span className="sticker" style={{ background: 'var(--mint)' }}>✓ Trained!</span> : !running ? <button className="btn mint" onClick={start} disabled={!info}>{p && p.step > 0 ? '▶ Keep training' : '▶ Start training'}</button>
+                : <button className="btn" onClick={pause}>⏸ Pause</button>}
+              <button className="btn ghost small" onClick={reset}>↺ Reset</button>
+              <span className="tag">step {p?.step ?? 0} / 1500</span>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800 }}><span>😮 Surprise meter</span><span>{Math.round((1 - quality) * 100)}%</span></div>
+              <div className="bar-track" style={{ marginTop: 6 }}><div className="bar-fill" style={{ width: `${(1 - quality) * 100}%`, background: 'var(--pink)' }} /></div>
+              <p className="muted" style={{ fontSize: '.85rem', margin: '4px 0 0' }}>How surprised Toki is by the real next letter. Learning = getting less surprised!</p>
+            </div>
+            <div style={{ marginTop: 12 }}><LossChart points={points} start={info?.loss ?? 3.4} /></div>
+            <h4 style={{ marginTop: 12 }}>What it writes 👇</h4>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {samples.map((s) => (
+                <div key={s.step} className="bubble toki enter" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '.9rem' }}>
+                  <span className="tag">step {s.step}</span> {s.text}
+                </div>
+              ))}
+            </div>
+          </>,
+          next: 'Now make it giant',
+        },
+        {
+          title: '🌋 Now imagine it giant',
+          body: <>
+            <Explain
+              kid={<p>Our baby AI has about 9 thousand knobs and read a few stories for a few seconds. A big model like <b>Llama 3.1</b> has <b>405 billion</b> knobs and read about <b>15 trillion</b> beads, on thousands of super-fast computer chips, for <b>months</b>. Counting its knobs at one per second would take about <b>12,800 years</b>!</p>}
+              curious={<p>Llama 3.1 (405B parameters) was trained on ~15 trillion tokens. Runs like that take months on thousands of GPUs. For comparison, GPT-2 (2019) had 1.6 billion parameters and ~100 billion tokens.</p>}
+            />
+            <div className="callout"><span className="em">🎯</span><div>Same game, just <b>way</b> bigger: look at the beads, guess the next one, nudge the knobs, repeat.</div></div>
+            <div className="grid-2" style={{ marginTop: 12 }}>
+              <div className="callout"><span className="em">🖥️</span>
+                <Explain
+                  kid={<div><b>Super expensive!</b> The special chips (GPUs) are great at doing lots of maths at once. Renting just one costs a few dollars an hour, and big models use <b>thousands</b> of them in giant buildings full of computers. That's why only a few companies can build them.</div>}
+                  curious={<div><b>Compute is the bottleneck.</b> A single H100 GPU rents for roughly $2–3/hour; Llama 3.1 405B used around 30 million GPU-hours on up to ~16,000 H100s. That's tens of millions of dollars, which is why GPUs and data centres are in such demand.</div>}
+                />
               </div>
-            ))}
-          </div>
-        </div>
-      </>}
-      play={<>
-        <Stage hint={running ? 'Knobs turning…' : 'Each knob is a real number inside the network'} camera={{ position: [0, 0.2, 9.5] }}>
-          <Knobs knobs={p?.knobs ?? Array(48).fill(0)} quality={quality} />
-        </Stage>
-        <div className="card" style={{ marginTop: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800 }}><span>🧠 Smartness</span><span>{Math.round(quality * 100)}%</span></div>
-          <div className="bar-track" style={{ marginTop: 6 }}><div className="bar-fill" style={{ width: `${quality * 100}%` }} /></div>
-          <p className="muted" style={{ margin: '8px 0 0', fontSize: '.9rem' }}>A real chatbot has about <b>a trillion</b> knobs. Counting one knob per second would take over 30,000 years!</p>
-        </div>
-      </>}
+              <div className="callout"><span className="em">📦</span>
+                <Explain
+                  kid={<div><b>And what comes out?</b> Just two things: a <b>giant file of knob numbers</b> and a <b>short program</b> that does the layer maths. When a company “releases a model”, that's what they share.</div>}
+                  curious={<div><b>What a model is:</b> a parameter file (405B numbers ≈ 800 GB at 2 bytes each) plus a short program that runs the forward pass. Releasing both is what “open weights” means.</div>}
+                />
+              </div>
+            </div>
+          </>,
+        },
+      ]}
+      play={<Stage hint={running ? 'Knobs turning…' : 'Each knob is a real number inside the network'} camera={{ position: [0, 0.2, 9.5] }}>
+        <Knobs knobs={p?.knobs ?? Array(48).fill(0)} quality={quality} />
+      </Stage>}
     />
   )
 }

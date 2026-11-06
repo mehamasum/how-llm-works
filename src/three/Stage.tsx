@@ -6,6 +6,7 @@ type Props = {
   children: ReactNode
   hint?: string
   badge?: ReactNode
+  overlay?: ReactNode
   camera?: { position?: [number, number, number]; fov?: number }
   height?: string
   className?: string
@@ -13,7 +14,7 @@ type Props = {
 
 // A rounded "toy box" holding one Three.js scene. The canvas is only created while the box
 // is near the screen, so phones never juggle more than one or two WebGL contexts.
-export function Stage({ children, hint, badge, camera, height, className }: Props) {
+export function Stage({ children, hint, badge, overlay, camera, height, className }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 
@@ -43,7 +44,7 @@ export function Stage({ children, hint, badge, camera, height, className }: Prop
       ) : (
         <div className="stage-loading">✨ loading toys…</div>
       )}
-      {hint && <div className="stage-hint">{hint}</div>}
+      {overlay ? <div className="stage-overlay">{overlay}</div> : hint && <div className="stage-hint">{hint}</div>}
       {badge && <div className="stage-badge">{badge}</div>}
     </div>
   )

@@ -46,6 +46,15 @@ const DEMOS: Demo[] = [
     dreams: ['\nHow I wonder what you are!\nUp above the world so high,\nLike a diamond in the sky.'],
     lesson: "It has seen this rhyme so many times that it remembers it word-for-word. That's called memorizing (or regurgitation).",
   },
+  {
+    id: 'pretend', label: 'Pretend chat page', emoji: '🎭',
+    prompt: 'A conversation between a curious kid and a helpful, friendly AI assistant.\n\nKid: What do bees make?\nAssistant: Bees make honey from the nectar of flowers!\nKid: Why is the sky blue?\nAssistant:',
+    dreams: [
+      ' Sunlight is made of all the colours, and the air scatters blue light the most, so we see blue everywhere!\nKid: Cool! Why is grass green?\nAssistant: Grass is full of',
+      ' Because the air bounces blue light around more than other colours.\nKid: what about sunsets\nKid: hello??\nComments (14)  ·  Share  ·  Report',
+    ],
+    lesson: "Dress the page up as a chat, and the dreamer plays the assistant! But it's wobbly: it may keep writing the kid's lines too, or wander off the page. That's why builders teach chatting properly next.",
+  },
 ]
 
 function DreamCloud({ dreaming }: { dreaming: boolean }) {
@@ -124,41 +133,65 @@ export default function Dreamer() {
   const go = () => { setK((v) => v + 1); blip('pop'); earn('dreamer') }
   const choose = (d: Demo) => { setDemo(d); setK(-1) }
 
+  const dreamBox = (
+    <>
+      <div className="bubble" style={{ whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace', fontSize: '.95rem', minHeight: 120 }}>
+        <span style={{ fontWeight: 800 }}>{demo.prompt}</span>
+        <span style={{ color: 'var(--accent)' }} className={k >= 0 && !done ? 'typing' : ''}>{shown}</span>
+      </div>
+      <div className="btn-row" style={{ marginTop: 10 }}>
+        <button className="btn grape" onClick={go}>{k < 0 ? '💤 Dream on!' : '🔁 Dream again'}</button>
+      </div>
+      {k >= 0 && done && (
+        <div className="callout enter" style={{ marginTop: 12 }}><span className="em">💡</span><div>{demo.lesson}</div></div>
+      )}
+    </>
+  )
+
   return (
-    <Chapter num={5} title="The Document Dreamer" sub="After all that reading, Toki is a… page dreamer?"
-      story={<>
-        <div className="card">
-          <Explain
-            kid={<>
-              <p>After reading the whole internet, Toki is really good at one thing: <b>continuing any page</b>. Give it the start of something, and it dreams up what comes next 💭.</p>
-              <p>But it's <b>not a helpful assistant yet!</b> If you ask it a question, it might just write <i>more questions</i>, like a worksheet.</p>
-            </>}
-            curious={<>
-              <p>The result of pre-training is a <b>base model</b>: an “internet document simulator”. It continues token sequences in the statistical style of its training data.</p>
-              <p>Its knowledge lives in its parameters as a kind of <b>lossy compression</b> of the internet — vague recollections, with frequently-seen text sometimes recalled verbatim. You can coax useful behaviour out of it with clever prompts (few-shot examples), but it isn't an assistant yet.</p>
-            </>}
-          />
-        </div>
-        <div className="card tilt-l">
-          <h3>💭 Make Toki dream</h3>
-          <div className="btn-row">
-            {DEMOS.map((d) => (
-              <button key={d.id} className={`btn small ${d.id === demo.id ? 'grape' : 'ghost'}`} onClick={() => choose(d)}>{d.emoji} {d.label}</button>
-            ))}
-          </div>
-          <div className="bubble" style={{ marginTop: 12, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace', fontSize: '.95rem', minHeight: 120 }}>
-            <span style={{ fontWeight: 800 }}>{demo.prompt}</span>
-            <span style={{ color: 'var(--accent)' }} className={k >= 0 && !done ? 'typing' : ''}>{shown}</span>
-          </div>
-          <div className="btn-row" style={{ marginTop: 10 }}>
-            <button className="btn grape" onClick={go}>{k < 0 ? '💤 Dream on!' : '🔁 Dream again'}</button>
-          </div>
-          {k >= 0 && done && (
-            <div className="callout enter" style={{ marginTop: 12 }}><span className="em">💡</span><div>{demo.lesson}</div></div>
-          )}
-          <p className="muted" style={{ fontSize: '.85rem', marginTop: 10 }}>These are recorded examples showing typical base-model behaviour.</p>
-        </div>
-      </>}
+    <Chapter title="The Document Dreamer" sub="After all that reading, Toki is a… page dreamer?"
+      steps={[
+        {
+          title: '💭 Toki, the page dreamer',
+          body: <Explain
+            kid={<p>After reading the whole internet, Toki is really good at one thing: <b>continuing any page</b>. Give it the start of something, and it dreams up what comes next.</p>}
+            curious={<p>The result of pre-training is a <b>base model</b>: an “internet document simulator”. It continues token sequences in the statistical style of its training data.</p>}
+          />,
+          next: 'Ask it a question',
+        },
+        {
+          title: '❓ Ask it a question',
+          body: <>
+            <p>Let's ask the dreamer a simple question. Tap <b>Dream on!</b>, then <b>Dream again</b>.</p>
+            <p className="muted">Each dream is different, because Toki picks every next bead with a little <b>dice roll</b>. You'll spin those dice yourself later!</p>
+            {demo.id === 'question' ? dreamBox : <button className="btn ghost small" onClick={() => choose(DEMOS[0])}>Show the question again</button>}
+          </>,
+          next: 'Try other pages',
+        },
+        {
+          title: '🪄 Start other pages',
+          body: <>
+            <p>Pick a page for Toki to continue:</p>
+            <div className="btn-row">
+              {DEMOS.slice(1).map((d) => (
+                <button key={d.id} className={`btn small ${d.id === demo.id ? 'grape' : 'ghost'}`} onClick={() => choose(d)}>{d.emoji} {d.label}</button>
+              ))}
+            </div>
+            {demo.id !== 'question' && <div style={{ marginTop: 12 }}>{dreamBox}</div>}
+          </>,
+          next: 'So what is it?',
+        },
+        {
+          title: '🧠 A fuzzy copy of the internet',
+          body: <>
+            <Explain
+              kid={<p>Toki remembers the internet a bit like a <b>dream</b>: lots of it, but fuzzy. Things it saw many times (like famous rhymes) it remembers word for word. Tricks like the 🎭 pretend chat page help a bit, but it's <b>not a reliable helper yet</b>!</p>}
+              curious={<p>Its knowledge lives in its parameters as a <b>lossy compression</b> of the internet: vague recollections, with frequently-seen text sometimes recalled verbatim. Clever prompts help: few-shot examples, or a page formatted as a Human/Assistant conversation that it continues. But that assistant is fragile and easily drifts, so it isn't a real assistant yet.</p>}
+            />
+            <p className="muted" style={{ fontSize: '.85rem' }}>The dreams in this chapter are recorded examples showing typical base-model behaviour.</p>
+          </>,
+        },
+      ]}
       play={<Stage hint="Toki is dreaming up pages" camera={{ position: [0, 0.3, 8] }}>
         <DreamCloud dreaming={k >= 0 && !done} />
       </Stage>}

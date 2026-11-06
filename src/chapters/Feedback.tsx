@@ -65,7 +65,6 @@ function Scene({ score, mood, fooled }: { score: number | null; mood: Mood; fool
 export default function Feedback() {
   const earn = useApp((s) => s.earn)
   const [votes, setVotes] = useState<(1 | -1 | 0)[]>(RATE.map(() => 0))
-  const [phase, setPhase] = useState<'rate' | 'train'>('rate')
   const [round, setRound] = useState(0)
   const [current, setCurrent] = useState<{ joke: Joke; score: number } | null>(null)
 
@@ -89,42 +88,42 @@ export default function Feedback() {
   const fooled = !!current?.joke.hack
 
   return (
-    <Chapter num={11} title="Thumbs Up, Thumbs Down" sub="Learning what people like (RLHF)"
-      story={<>
-        <div className="card">
-          <Explain
-            kid={<>
-              <p>Some things don't have one right answer, like <b>“tell me a funny joke”</b> 😂. You can't check that like a math problem!</p>
-              <p>So people give jokes a 👍 or 👎. Then we build a <b>judge robot</b> that learns what people like. Toki practises and the judge gives scores. But watch out… the judge can be <b>tricked</b>!</p>
-            </>}
-            curious={<>
-              <p><b>RLHF</b> (reinforcement learning from human feedback) is for tasks without checkable answers. Humans rank a few outputs; a separate <b>reward model</b> is trained to imitate those rankings; then RL runs against the reward model, which never gets tired.</p>
-              <p>The catch: the reward model is itself a neural net with holes. Run RL long enough and the model finds <b>adversarial</b> nonsense that scores highly. So RLHF is run only for a short while: more of a fine-tune than true open-ended RL.</p>
-            </>}
-          />
-        </div>
-        {phase === 'rate' ? (
-          <div className="card tilt-l">
-            <h3>😂 Step 1: Rate Toki's pelican jokes</h3>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {RATE.map((j, i) => (
-                <div key={i} className="bubble toki" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <div style={{ flex: '1 1 200px' }}>{j.text}</div>
-                  <div className="btn-row">
-                    <button className={`btn small icon-btn ${votes[i] === 1 ? 'mint' : 'ghost'}`} aria-label="Thumbs up" onClick={() => vote(i, 1)}>👍</button>
-                    <button className={`btn small icon-btn ${votes[i] === -1 ? 'pink' : 'ghost'}`} aria-label="Thumbs down" onClick={() => vote(i, -1)}>👎</button>
-                  </div>
+    <Chapter title="Thumbs Up, Thumbs Down" sub="Learning what people like (RLHF)"
+      steps={[
+        {
+          title: '😂 No single right answer',
+          body: <Explain
+            kid={<p>Some things don't have one right answer, like <b>“tell me a funny joke”</b>. You can't check that like a math problem! So we need <b>people</b> to tell Toki what's good.</p>}
+            curious={<p><b>RLHF</b> (reinforcement learning from human feedback) is for tasks without checkable answers, like humour or writing style.</p>}
+          />,
+          next: 'Rate some jokes',
+        },
+        {
+          title: '👍 Rate Toki\'s pelican jokes',
+          body: <div style={{ display: 'grid', gap: 10 }}>
+            <p style={{ margin: 0 }}>Writing a great joke is hard. But <b>judging</b> one is easy: you just know if it's funny! So people only rate Toki's jokes.</p>
+            {RATE.map((j, i) => (
+              <div key={i} className="bubble toki" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 200px' }}>{j.text}</div>
+                <div className="btn-row">
+                  <button className={`btn small icon-btn ${votes[i] === 1 ? 'mint' : 'ghost'}`} aria-label="Thumbs up" onClick={() => vote(i, 1)}>👍</button>
+                  <button className={`btn small icon-btn ${votes[i] === -1 ? 'pink' : 'ghost'}`} aria-label="Thumbs down" onClick={() => vote(i, -1)}>👎</button>
                 </div>
-              ))}
-            </div>
-            <button className="btn grape" style={{ marginTop: 12 }} disabled={!allVoted} onClick={() => { setPhase('train'); blip('ding') }}>
-              {allVoted ? '⚖️ Build the judge robot' : 'Rate all 4 jokes first'}
-            </button>
-          </div>
-        ) : (
-          <div className="card tilt-l">
-            <h3>⚖️ Step 2: Toki practises with the judge</h3>
-            <p>The judge learned your taste:{' '}
+              </div>
+            ))}
+          </div>,
+          canNext: allVoted,
+          lockedHint: 'Rate all 4 jokes first',
+          next: '⚖️ Build the judge robot',
+        },
+        {
+          title: '⚖️ Toki practises with the judge',
+          body: <>
+            <Explain
+              kid={<p>People can't rate millions of jokes, so we build a pink <b>judge robot</b> that learned your taste from your thumbs. Now Toki writes new jokes, and the judge scores them. Keep practising!</p>}
+              curious={<p>A separate <b>reward model</b> is trained to imitate the human ratings; then RL runs against the reward model, which never gets tired.</p>}
+            />
+            <p>The judge learned:{' '}
               {(Object.keys(taste) as Feature[]).map((f) => (
                 <span key={f} className="tag" style={{ marginRight: 4, background: taste[f] > 0 ? 'var(--mint)' : taste[f] < 0 ? 'var(--pink)' : undefined }}>
                   {{ pun: 'word puns', silly: 'silly stories', long: 'long facts' }[f]} {taste[f] > 0 ? '👍' : taste[f] < 0 ? '👎' : '🤷'}
@@ -140,13 +139,22 @@ export default function Feedback() {
             )}
             {fooled && (
               <div className="callout enter"><span className="em">😱</span><div>
-                <b>The judge got tricked!</b> Toki found silly nonsense that the judge robot scores 10/10. It's not funny at all! That's why this kind of practice is only done <b>for a little while</b>.
+                <b>The judge got tricked!</b> Toki found silly nonsense that the judge scores 10/10. It's not funny at all!
               </div></div>
             )}
-            <button className="btn ghost small" style={{ marginTop: 10 }} onClick={() => { setPhase('rate'); setRound(0); setCurrent(null) }}>↺ Re-rate jokes</button>
-          </div>
-        )}
-      </>}
+          </>,
+          canNext: fooled,
+          lockedHint: 'Keep practising…',
+          next: 'Why did that happen?',
+        },
+        {
+          title: '⏱️ Only practise a little while',
+          body: <Explain
+            kid={<p>The judge robot is a computer too, so it has its own <b>holes</b>. If Toki practises against it for too long, Toki finds sneaky nonsense that tricks it. So builders only do this kind of practice <b>for a little while</b>.</p>}
+            curious={<p>The reward model is itself a neural net with holes. Run RL long enough and the policy finds <b>adversarial</b> outputs that score highly. So RLHF is run only briefly: more of a fine-tune than true open-ended RL.</p>}
+          />,
+        },
+      ]}
       play={<Stage hint="Blue = Toki · Pink = judge bot" camera={{ position: [0, 0.2, 8] }}>
         <Scene score={current?.score ?? null} mood={fooled ? 'happy' : current ? 'happy' : 'think'} fooled={fooled} />
       </Stage>}

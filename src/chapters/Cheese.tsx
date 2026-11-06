@@ -26,7 +26,7 @@ const HOLES: Hole[] = [
   {
     id: 'decimal', emoji: '🔢', title: 'Which number is bigger?', pos: [-1.15, -0.15],
     q: 'Which is bigger: 9.11 or 9.9?', oops: '9.11 is bigger than 9.9.',
-    why: 'The numbers get chopped into beads like “9”, “.”, “11”. Also, in things like book chapters and software versions, 9.11 really does come after 9.9! The model may have mixed those up.',
+    why: 'The numbers get chopped into beads like “9”, “.”, “11”. Also, in Bible verses and book chapters, 9.11 really does come after 9.9! When researchers looked inside a model, the parts that know about Bible verses lit up.',
     probe: '9.11 vs 9.9', fix: 'Ask it to compare step by step, or to use code.',
   },
   {
@@ -125,47 +125,56 @@ export default function Cheese() {
   const toks = open && tk ? tk.tokenize(open.probe) : []
 
   return (
-    <Chapter num={9} title="The Swiss-Cheese Brain" sub="Super smart… with surprising little holes"
-      story={<>
-        <div className="card">
-          <Explain
-            kid={<>
-              <p>Toki can write poems and explain science, but sometimes it trips on things that are <b>easy for you</b>! Its brain is like <b>Swiss cheese</b> 🧀: mostly yummy, with a few surprising holes.</p>
-              <p>Tap the holes in the cheese to find them all! ({found.length}/{HOLES.length})</p>
-            </>}
-            curious={<>
-              <p>LLM abilities are uneven: “jagged” or “Swiss cheese” capabilities. Many failures come from <b>tokenization</b> (the model doesn't see characters) and from the <b>fixed compute per token</b>.</p>
-              <p>Newer models often get these classic examples right because they were trained on them or use tools. But the lesson still holds: check the important stuff! Tap the holes ({found.length}/{HOLES.length}).</p>
-            </>}
-          />
-          <div className="btn-row">
-            {HOLES.map((h) => (
-              <button key={h.id} className={`btn small ${open?.id === h.id ? 'tangerine' : 'ghost'}`} onClick={() => pick(h)}>
-                {found.includes(h.id) ? '✅' : h.emoji} {h.title}
-              </button>
-            ))}
-          </div>
-        </div>
-        {open && (
-          <div className="card tilt-l enter" key={open.id}>
-            <h3>{open.emoji} {open.title}</h3>
-            <div className="bubble user"><b>🧒</b> {open.q}</div>
-            {!revealed ? (
-              <button className="btn tangerine" style={{ marginTop: 10 }} onClick={() => { setRevealed(true); blip('boop') }}>What might Toki say?</button>
-            ) : (
-              <>
-                <div className="bubble toki enter" style={{ marginTop: 8 }}><b>🤖</b> {open.oops} <span className="tag" style={{ background: 'var(--pink)' }}>oops!</span></div>
-                <p style={{ marginTop: 12 }}><b>Why?</b> {open.why}</p>
-                <p className="muted" style={{ marginBottom: 6 }}>What Toki actually sees:</p>
-                <div className="chips">
-                  {toks.map((t, i) => <span key={i} className="chip" style={{ background: colorFor(i) }}>{show(t.text)}<small>{t.id}</small></span>)}
-                </div>
-                <div className="callout" style={{ marginTop: 12 }}><span className="em">🛠️</span><div><b>Fix:</b> {open.fix}</div></div>
-              </>
+    <Chapter title="The Swiss-Cheese Brain" sub="Super smart… with surprising little holes"
+      steps={[
+        {
+          title: '🧀 A Swiss-cheese brain',
+          body: <Explain
+            kid={<p>Toki can write poems and explain science, but sometimes it trips on things that are <b>easy for you</b>! Its brain is like <b>Swiss cheese</b>: mostly yummy, with a few surprising holes.</p>}
+            curious={<p>LLM abilities are uneven: “jagged” or “Swiss cheese” capabilities. Many failures come from <b>tokenization</b> (the model doesn't see characters) and from the <b>fixed compute per token</b>.</p>}
+          />,
+          next: 'Find the holes',
+        },
+        {
+          title: `🔍 Find the holes (${found.length}/${HOLES.length})`,
+          body: <>
+            <p>Tap a hole in the cheese, or a button:</p>
+            <div className="btn-row">
+              {HOLES.map((h) => (
+                <button key={h.id} className={`btn small ${open?.id === h.id ? 'tangerine' : 'ghost'}`} onClick={() => pick(h)}>
+                  {found.includes(h.id) ? '✅' : h.emoji} {h.title}
+                </button>
+              ))}
+            </div>
+            {open && (
+              <div className="enter" key={open.id} style={{ marginTop: 14 }}>
+                <div className="bubble user"><b>🧒</b> {open.q}</div>
+                {!revealed ? (
+                  <button className="btn tangerine" style={{ marginTop: 10 }} onClick={() => { setRevealed(true); blip('boop') }}>What might Toki say?</button>
+                ) : (
+                  <>
+                    <div className="bubble toki enter" style={{ marginTop: 8 }}><b>🤖</b> {open.oops} <span className="tag" style={{ background: 'var(--pink)' }}>oops!</span></div>
+                    <p style={{ marginTop: 12 }}><b>Why?</b> {open.why}</p>
+                    <p className="muted" style={{ marginBottom: 6 }}>What Toki actually sees:</p>
+                    <div className="chips">
+                      {toks.map((t, i) => <span key={i} className="chip" style={{ background: colorFor(i) }}>{show(t.text)}<small>{t.id}</small></span>)}
+                    </div>
+                    <div className="callout" style={{ marginTop: 12 }}><span className="em">🛠️</span><div><b>Fix:</b> {open.fix}</div></div>
+                  </>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </>}
+          </>,
+          next: 'What did we learn?',
+        },
+        {
+          title: '✅ Check the important stuff',
+          body: <Explain
+            kid={<p>Toki is a <b>great helper</b>, but it has holes you can't always see. So for important things, <b>double-check</b>, or ask it to use a tool like code.</p>}
+            curious={<p>Newer models often get these classic examples right because they were trained on them or use tools. But the lesson holds: use LLMs as tools, and verify what matters.</p>}
+          />,
+        },
+      ]}
       play={<Stage hint="Tap a hole in the cheese!" camera={{ position: [0, 0.4, 8] }}>
         <CheeseWedge open={open?.id ?? null} found={found} onPick={pick} />
       </Stage>}

@@ -48,10 +48,20 @@ export function BeadRows({ toks, view, sel, onSel }: { toks: Tok[]; view: View; 
       {items.map((it, i) => (
         <group key={`${view}-${i}-${it.label}`}>
           <Bead position={[pts[i].x, pts[i].y, pts[i].z]} color={toks[it.tok]?.special ? '#ffc93c' : colorFor(it.tok)} special={toks[it.tok]?.special} size={size} delay={i * 0.03} phase={i * 0.5}
-            selected={it.tok === sel} onClick={() => onSel(it.tok)} />
+            selected={it.tok === sel} dimmed={sel >= 0 && it.tok !== sel} onClick={() => onSel(it.tok)} />
+          {/* Reveal the token's number right on the tapped bead (once per token in letters view). */}
+          {it.tok === sel && (view === 'tokens' || items[i - 1]?.tok !== sel) && (
+            <Html position={[pts[i].x, pts[i].y + 0.25, pts[i].z + size * 1.2]} center zIndexRange={[2, 1]} style={{ pointerEvents: 'none' }}>
+              <div className="bead-num" key={toks[sel]?.id}>{toks[sel]?.id}</div>
+            </Html>
+          )}
           {(view === 'tokens' ? items.length <= 36 : items.length <= 70) && (
             <Html position={[pts[i].x, pts[i].y - size * 1.5, pts[i].z]} center zIndexRange={[1, 0]} style={{ pointerEvents: 'none' }}>
-              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: view === 'tokens' ? 12 : 10, fontWeight: 700, whiteSpace: 'pre', color: '#2b2140', background: 'rgba(255,255,255,.85)', borderRadius: 6, padding: '0 4px' }}>
+              <div style={{
+                fontFamily: 'ui-monospace, monospace', fontSize: (view === 'tokens' ? 12 : 10) * (it.tok === sel ? 1.3 : 1), fontWeight: 700, whiteSpace: 'pre',
+                color: it.tok === sel ? '#fff' : '#2b2140', background: it.tok === sel ? '#2b2140' : 'rgba(255,255,255,.85)',
+                borderRadius: 6, padding: '0 4px', opacity: sel >= 0 && it.tok !== sel ? 0.35 : 1, transition: 'all .2s',
+              }}>
                 {show(it.label)}
               </div>
             </Html>

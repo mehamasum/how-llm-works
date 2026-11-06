@@ -114,45 +114,66 @@ export default function Think() {
     return () => clearInterval(id)
   }, [style, steps.length, earn, run])
 
+  const problem = <div className="bubble user">Emily buys <b>3 apples</b> and <b>2 oranges</b>. Each orange costs <b>$2</b>. The total is <b>$13</b>. How much is each apple?</div>
+  const answer = (
+    <>
+      <div className="bubble toki">
+        {steps.slice(0, upTo).map((s) => s.w).join(' ')}
+        {upTo < steps.length && <span className="typing" />}
+      </div>
+      <button className="btn small ghost" style={{ marginTop: 10 }} onClick={() => setRun((r) => r + 1)}>↺ Replay</button>
+    </>
+  )
+
   return (
-    <Chapter num={8} title="Tokens to Think" sub="Why “show your work” really helps AI"
-      story={<>
-        <div className="card">
-          <Explain
+    <Chapter title="Tokens to Think" sub="Why “show your work” really helps AI"
+      onStep={(s) => { if (s === 1) setStyle('first'); if (s === 2) setStyle('steps') }}
+      steps={[
+        {
+          title: '🥤 One small cup of thinking per bead',
+          body: <Explain
             kid={<>
-              <p>Here's a strange fact: Toki can only do a <b>small cup of thinking</b> 🥤 for each bead it writes. Every bead gets the same size cup!</p>
-              <p>If Toki tries to blurt out the answer right away, all the hard thinking has to squeeze into <b>one cup</b>, and it spills over 💦. But if it works <b>step by step</b>, the thinking spreads across many cups.</p>
+              <p>Here's a strange fact: Toki can only do a <b>small cup of thinking</b> for each bead it writes. Every bead gets the <b>same size cup</b>. See the cups in the box?</p>
+              <p>So when a helper writes a practice answer, <i>how</i> they write it really matters. Let's compare two answers to the same problem.</p>
             </>}
-            curious={<>
-              <p>Each token is produced by one pass through the network: a fixed, limited amount of computation. A model can't do a lot of reasoning “in its head” for a single token.</p>
-              <p>So good training answers <b>spread the reasoning across many tokens</b>, writing intermediate results before the final answer. Models are also bad at mental arithmetic and counting, so asking them to <b>use code</b> is often more reliable.</p>
-            </>}
-          />
-        </div>
-        <div className="card tilt-l">
-          <h3>🍎 The apple problem</h3>
-          <div className="bubble user">Emily buys <b>3 apples</b> and <b>2 oranges</b>. Each orange costs <b>$2</b>. The total is <b>$13</b>. How much is each apple?</div>
-          <div className="switch" style={{ marginTop: 12 }}>
-            <button className={style === 'first' ? 'on' : ''} onClick={() => setStyle('first')}>😬 Answer first</button>
-            <button className={style === 'steps' ? 'on' : ''} onClick={() => setStyle('steps')}>😎 Step by step</button>
-          </div>
-          <div className="bubble toki" style={{ marginTop: 10 }}>
-            {steps.slice(0, upTo).map((s) => s.w).join(' ')}
-            {upTo < steps.length && <span className="typing" />}
-          </div>
-          {upTo >= steps.length && (
-            <div className="callout enter" style={{ marginTop: 10 }}>
-              <span className="em">{style === 'first' ? '💦' : '🎉'}</span>
-              <div>{style === 'first'
-                ? <>The <b>$3</b> bead had to do <b>all</b> the math at once, and its cup overflowed! Sometimes it works, but it's risky. Try <b>Step by step</b>.</>
-                : <>Every bead did just a little bit of work. No spills! This is why AI often “thinks out loud”.</>}
-              </div>
-            </div>
-          )}
-          <button className="btn small ghost" style={{ marginTop: 10 }} onClick={() => setRun((r) => r + 1)}>↺ Replay</button>
-        </div>
-        <div className="callout"><span className="em">🧮</span><div><b>Tip:</b> For counting or big math, ask the chatbot to <b>use code</b>. It's like giving Toki a calculator!</div></div>
-      </>}
+            curious={<p>Each token is produced by one pass through the network: a fixed, limited amount of computation. A model can't do a lot of reasoning “in its head” for a single token.</p>}
+          />,
+          next: 'Compare two answers',
+        },
+        {
+          title: '😬 Answer A: blurt it out',
+          body: <>
+            {problem}
+            <p style={{ marginTop: 10 }}><b>Practice answer A</b> gives the answer right away:</p>
+            {answer}
+            {upTo >= steps.length && style === 'first' && (
+              <div className="callout enter" style={{ marginTop: 10 }}><span className="em">💦</span>
+                <div>Both answers say $3, but in answer A the <b>$3</b> bead had to do <b>all</b> the math at once, and its cup overflowed! If Toki copies answers like this, it learns to guess in one go.</div></div>
+            )}
+          </>,
+          next: 'Now answer B',
+        },
+        {
+          title: '😎 Answer B: step by step',
+          body: <>
+            {problem}
+            <p style={{ marginTop: 10 }}><b>Practice answer B</b> works it out step by step:</p>
+            {answer}
+            {upTo >= steps.length && style === 'steps' && (
+              <div className="callout enter" style={{ marginTop: 10 }}><span className="em">🎉</span>
+                <div>Every bead did just a little bit of work. No spills! Answer B is the better one to practise on, and it's why chatbots often “think out loud”.</div></div>
+            )}
+          </>,
+          next: 'One more tip',
+        },
+        {
+          title: '🧮 Give Toki a calculator',
+          body: <Explain
+            kid={<p>Toki is also not great at counting or big math in its head. For those, ask the chatbot to <b>use code</b>. It's like giving Toki a calculator!</p>}
+            curious={<p>Models are bad at mental arithmetic and counting, so good answers spread reasoning across tokens, and asking them to <b>use code</b> (a tool) is often more reliable.</p>}
+          />,
+        },
+      ]}
       play={<Stage hint="Each cup = thinking for one bead" camera={{ position: [0, 2.6, 7.6] }}>
         <Cups steps={steps} upTo={upTo} />
       </Stage>}

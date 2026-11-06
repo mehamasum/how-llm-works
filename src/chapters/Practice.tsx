@@ -122,48 +122,86 @@ export default function Practice() {
   const total = weights.reduce((a, b) => a + b, 0)
 
   return (
-    <Chapter num={10} title="Practice Makes Better" sub="Reinforcement learning: try, check, repeat"
-      story={<>
-        <div className="card">
-          <Explain
+    <Chapter title="Practice Makes Better" sub="Reinforcement learning: try, check, repeat"
+      steps={[
+        {
+          title: '📘 Like a school book',
+          body: <Explain
+            kid={<p>Think about a school book. It has <b>explanations</b> (that's the internet reading), <b>worked examples</b> (that's the practice chats)… and <b>practice problems</b>! Toki needs those too.</p>}
+            curious={<p>Pre-training ≈ reading the explanations, supervised fine-tuning ≈ studying worked examples, and <b>reinforcement learning</b> ≈ doing the practice problems.</p>}
+          />,
+          next: 'How does Toki practise?',
+        },
+        {
+          title: '⭐ Gold stars for right answers',
+          body: <Explain
             kid={<>
-              <p>Think about a school book 📘. It has <b>explanations</b> (that's the internet reading), <b>worked examples</b> (that's the practice chats)… and <b>practice problems</b>!</p>
-              <p>In this last stage, Toki tries the same problem <b>lots of times</b>, in different ways. The ways that got the <b>right answer</b> get a gold star ⭐ and Toki does them more. Nobody tells Toki <i>how</i> to think: it figures that out itself!</p>
+              <p>Remember the cups of thinking? Steps that are easy for a person might be too big for one of Toki's cups, and the other way round. So even the helpers <b>can't know</b> which steps work best for Toki's brain!</p>
+              <p>So Toki tries the same problem <b>lots of times</b>, in different ways. The ways that got the <b>right answer</b> get a gold star ⭐, and Toki does them more. Nobody tells Toki <i>how</i> to think: it figures that out itself!</p>
             </>}
             curious={<>
-              <p><b>Reinforcement learning (RL)</b>: for problems with checkable answers (math, code), the model samples many solutions, and the token sequences that reach correct answers are reinforced.</p>
-              <p>Models like DeepSeek-R1 and OpenAI's o-series learned this way and developed long “thinking” on their own: re-checking, trying other approaches, saying “wait…”. Just as AlphaGo found the surprising <b>Move 37</b>, RL can discover strategies no human demonstrated.</p>
+              <p>A human labeler can't know which token sequence is easiest for the model: their sense of difficulty differs from the model's per-token compute.</p>
+              <p>So for problems with checkable answers (math, code), the model samples many solutions, and the token sequences that reach correct answers are reinforced.</p>
             </>}
-          />
-        </div>
-        <div className="card tilt-l">
-          <h3>🏋️ Practice round {round + 1}</h3>
-          <p className="muted">Toki tries a math problem 20 times. Each colour is a different way of thinking.</p>
-          <div className="btn-row">
-            <button className="btn mint" onClick={practise} disabled={busy}>▶ Practise 20 times</button>
-            <button className="btn ghost small" onClick={reset} disabled={busy}>↺ Start over</button>
-          </div>
-          <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
-            {STYLES.map((s, i) => (
-              <div key={s.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '.95rem' }}>
-                  <span>{s.emoji} {s.name}</span><span>{Math.round((weights[i] / total) * 100)}% of tries</span>
+          />,
+          next: 'Let Toki practise',
+        },
+        {
+          title: `🏋️ Practice round ${round + 1}`,
+          body: <>
+            <p className="muted">Toki tries a math problem 20 times. Each colour in the box is a different way of thinking. Practise a few rounds and watch the bars!</p>
+            <div className="btn-row">
+              <button className="btn mint" onClick={practise} disabled={busy}>▶ Practise 20 times</button>
+              <button className="btn ghost small" onClick={reset} disabled={busy}>↺ Start over</button>
+            </div>
+            <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
+              {STYLES.map((s, i) => (
+                <div key={s.id}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '.95rem' }}>
+                    <span>{s.emoji} {s.name}</span><span>{Math.round((weights[i] / total) * 100)}% of tries</span>
+                  </div>
+                  <div className="bar-track"><div className="bar-fill" style={{ width: `${(weights[i] / total) * 100}%`, background: s.color }} /></div>
                 </div>
-                <div className="bar-track"><div className="bar-fill" style={{ width: `${(weights[i] / total) * 100}%`, background: s.color }} /></div>
+              ))}
+            </div>
+            {history.length > 0 && (
+              <p style={{ marginTop: 12 }}>✅ Right answers per round: {history.map((h, i) => <span key={i} className="tag" style={{ marginRight: 4 }}>{h}/20</span>)}</p>
+            )}
+            {round >= 3 && (
+              <div className="callout enter"><span className="em">🤯</span><div>See that? Toki taught <b>itself</b> to double-check its work, because that's what keeps winning!</div></div>
+            )}
+          </>,
+          canNext: round >= 3,
+          lockedHint: `Practise ${Math.max(0, 3 - round)} more round${3 - round === 1 ? '' : 's'}`,
+          next: 'Meet the thinking models',
+        },
+        {
+          title: '🤔 Thinking models',
+          body: <>
+            <Explain
+              kid={<p>Real chatbots learned the same trick! Some now <b>think out loud</b> before answering, and even check their own work:</p>}
+              curious={<p>Models like DeepSeek-R1 and OpenAI's o-series learned this way and developed long “thinking” on their own: re-checking, trying other approaches, saying “wait…”. Just as AlphaGo found the surprising <b>Move 37</b>, RL can discover strategies no human demonstrated.</p>}
+            />
+            <div className="bubble toki" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '.9rem' }}>
+              <b>🤖 thinking…</b> 3 apples + 2 oranges = $13. Oranges are 2 × $2 = $4. So apples are $9, and each one is $3. <b>Wait, let me double-check:</b> 3 × $3 + $4 = $13. ✅ Yes!
+            </div>
+            <div className="grid-2" style={{ marginTop: 12 }}>
+              <div className="callout"><span className="em">🧩</span>
+                <Explain
+                  kid={<div><b>When to pick a thinking model:</b> tricky maths, puzzles, code and big plans. For a quick fact or a fun chat, a normal one is faster and works just as well.</div>}
+                  curious={<div><b>When to use one:</b> hard maths, code and multi-step reasoning, where the extra tokens pay off. For simple lookups or writing help, a non-thinking model is faster and cheaper with similar quality.</div>}
+                />
               </div>
-            ))}
-          </div>
-          {history.length > 0 && (
-            <p style={{ marginTop: 12 }}>✅ Right answers per round: {history.map((h, i) => <span key={i} className="tag" style={{ marginRight: 4 }}>{h}/20</span>)}</p>
-          )}
-          {round >= 3 && (
-            <div className="callout enter"><span className="em">🤯</span><div>See that? Toki taught <b>itself</b> to double-check its work, because that's what keeps winning. Real “thinking” models discovered the same trick!</div></div>
-          )}
-        </div>
-        <div className="bubble toki" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '.9rem' }}>
-          <b>🤖 thinking…</b> 3 apples + 2 oranges = $13. Oranges are 2 × $2 = $4. So apples are $9, and each one is $3. <b>Wait, let me double-check:</b> 3 × $3 + $4 = $13. ✅ Yes!
-        </div>
-      </>}
+              <div className="callout"><span className="em">🫥</span>
+                <Explain
+                  kid={<div><b>Peeking at the thinking:</b> some apps show you all of it, others only show a short summary and keep the rest hidden.</div>}
+                  curious={<div><b>Hidden reasoning:</b> some providers show only summaries of the chain of thought, partly so others can't copy it to train their own models (“distillation”). Open models like DeepSeek-R1 show it all.</div>}
+                />
+              </div>
+            </div>
+          </>,
+        },
+      ]}
       play={<Stage hint={busy ? 'Trying…' : 'Glowing = right answer ⭐'} camera={{ position: [0, 0, 8] }}>
         <Tries attempts={attempts} reveal={reveal} />
       </Stage>}

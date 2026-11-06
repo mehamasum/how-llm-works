@@ -141,27 +141,33 @@ export default function Internet() {
   }
 
   return (
-    <Chapter num={1} title="Read the Internet" sub="Step one: collect a mountain of text"
-      story={<>
-        <div className="card">
-          <Explain
+    <Chapter title="Read the Internet" sub="Step one: collect a mountain of text"
+      steps={[
+        {
+          title: '🌍 Toki needs to read. A lot!',
+          body: <Explain
             kid={<>
-              <p>To learn to talk, Toki first needs <b>lots and lots of reading</b>. So the builders download millions of web pages 🌍.</p>
-              <p>But the internet is messy! There's spam, computer code, and people's private info. So everything goes through a <b>giant funnel of filters</b> that keeps only the good stuff.</p>
+              <p>To learn to talk, Toki first needs <b>lots and lots of reading</b>. So the builders download millions of web pages.</p>
+              <p>Watch the pages fall into the funnel on the right 👉</p>
             </>}
-            curious={<>
-              <p>Pre-training starts with a huge crawl of public web pages (e.g. Common Crawl). Hugging Face's <b>FineWeb</b> dataset is a good public example of what companies build internally.</p>
-              <p>The pipeline: <b>URL filtering</b> (block spam/malware/adult sites) → <b>text extraction</b> (strip HTML) → <b>language filtering</b> (FineWeb keeps pages that are &gt;65% English) → dedup & quality filters → <b>PII removal</b>.</p>
-            </>}
-          />
-          <div className="grid-2" style={{ marginTop: 10 }}>
-            <div className="callout"><span className="em">💾</span><div><div className="big-num">44 TB</div>That's FineWeb after filtering. It fits on one big hard drive!</div></div>
-            <div className="callout"><span className="em">📚</span><div><div className="big-num">15 trillion</div>little word-pieces (tokens) of text.</div></div>
-          </div>
-        </div>
-        <div className="card tilt-r">
-          <h3>🧹 Be the filter!</h3>
-          {!finished ? (
+            curious={<p>Pre-training starts with a huge crawl of public web pages (e.g. Common Crawl). Hugging Face's <b>FineWeb</b> dataset is a good public example of what companies build internally.</p>}
+          />,
+          next: 'But the internet is messy…',
+        },
+        {
+          title: '🧹 Keep the good stuff only',
+          body: <>
+            <Explain
+              kid={<p>The internet has spam, computer code and people's private info. So every page goes through a <b>giant funnel of filters</b> that keeps only the good stuff.</p>}
+              curious={<p>The pipeline: <b>URL filtering</b> (block spam/malware/adult sites) → <b>text extraction</b> (strip HTML) → <b>language filtering</b> (FineWeb keeps pages that are &gt;65% English) → dedup & quality filters → <b>PII removal</b>.</p>}
+            />
+            <p>Now <b>you</b> be the filter!</p>
+          </>,
+          next: 'Play “Be the filter”',
+        },
+        {
+          title: '🎮 Be the filter!',
+          body: !finished ? (
             <>
               <p className="muted">Page {idx + 1} of {DOCS.length} · Should this page go into Toki's reading pile?</p>
               <div className={`bubble ${answer === false ? 'shake' : ''}`} style={{ fontFamily: doc.text.startsWith('<') ? 'ui-monospace, monospace' : undefined }}>
@@ -187,9 +193,21 @@ export default function Internet() {
               <p>You're a great filter! Real filters do this <b>automatically</b> for billions of pages.</p>
               <button className="btn small ghost" onClick={() => { setIdx(0); setScore(0) }}>Play again</button>
             </div>
-          )}
-        </div>
-      </>}
+          ),
+          next: 'How big is the pile?',
+        },
+        {
+          title: '💾 The pile of reading',
+          body: <>
+            <p>After all that filtering, what's left is still <b>enormous</b>:</p>
+            <div className="grid-2">
+              <div className="callout"><span className="em">💾</span><div><div className="big-num">44 TB</div>That's FineWeb after filtering. It fits on one big hard drive!</div></div>
+              <div className="callout"><span className="em">📚</span><div><div className="big-num">15 trillion</div>little word-pieces (tokens) of text.</div></div>
+            </div>
+            <p style={{ marginTop: 12 }}>But wait… what's a <b>token</b>? Let's find out!</p>
+          </>,
+        },
+      ]}
       play={<Stage hint="Good pages go in · junk gets bounced!" camera={{ position: [0, 0.3, 9] }}>
         <Funnel kept={kept} onCount={() => setKept((k) => k + 1)} />
       </Stage>}

@@ -1,16 +1,27 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { CHAPTERS } from './chapters'
 import { goTo, useChapterIndex } from './nav'
 import { useApp } from './store'
 import { ModeSwitch } from './ui/Explain'
 import { blip } from './sound'
 import { Oops } from './ui/Oops'
+import { TimeWarp } from './ui/TimeWarp'
 
 export default function App() {
   const i = useChapterIndex()
   const ch = CHAPTERS[i]
   const [map, setMap] = useState(false)
   const { sound, toggleSound, stickers } = useApp()
+
+  // Play the time-travel animation whenever the tour crosses between the present and the flashback.
+  const [warp, setWarp] = useState<null | 'past' | 'now'>(null)
+  const lastEra = useRef(ch.era)
+  useEffect(() => {
+    if (ch.era !== lastEra.current) setWarp(ch.era)
+    lastEra.current = ch.era
+    document.documentElement.dataset.era = ch.era
+  }, [ch.era])
+  const endWarp = useCallback(() => setWarp(null), [])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent', ch.accent)
@@ -58,6 +69,8 @@ export default function App() {
           <span className="txt">Next</span> ▶
         </button>
       </nav>
+
+      {warp && <TimeWarp to={warp} onDone={endWarp} />}
 
       {map && (
         <div className="overlay" onClick={() => setMap(false)} role="dialog" aria-modal="true" aria-label="Chapter map">

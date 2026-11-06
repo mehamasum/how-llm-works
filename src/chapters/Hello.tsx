@@ -42,8 +42,10 @@ function Scene({ mood, n, burst }: { mood: Mood; n: number; burst: number }) {
 }
 
 export default function Hello() {
-  const { sentence, setSentence, earn } = useApp()
-  const [draft, setDraft] = useState(sentence)
+  const { sentence, setSentence, earn, stickers } = useApp()
+  // The hello sticker is earned on the first Enter, so returning visitors aren't asked again.
+  const entered = stickers.includes('hello')
+  const [draft, setDraft] = useState(entered ? sentence : '')
   const [burst, setBurst] = useState(0)
   const [mood, setMood] = useState<Mood>('happy')
 
@@ -73,20 +75,22 @@ export default function Hello() {
             <label htmlFor="sentence"><b>Say something to Toki</b> <span className="muted">(we'll use it all the way through)</span></label>
             <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
               <input id="sentence" className="input" style={{ flex: '1 1 240px' }} value={draft} maxLength={160}
+                placeholder="e.g. Once upon a time, a little robot…"
                 onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} />
-              <button className="btn pink" onClick={send}>Enter ⏎</button>
+              <button className="btn pink" onClick={send} disabled={!draft.trim()}>Enter ⏎</button>
             </div>
             {burst > 0 && (
               <div className="callout enter" style={{ marginTop: 14 }}>
                 <span className="em">✨</span>
                 <div>
-                  <b>Whoosh!</b> Your words just turned into those spinning candy beads. Toki will now guess what comes next — one bead at a time. Want to see how?
+                  <b>Toki is about to answer you!</b> But how does a robot know what to say? To find out, we need to go back in time, to when Toki was being built. ⏪
                 </div>
               </div>
             )}
           </div>
           <div className="btn-row" style={{ marginTop: 22 }}>
-            <button className="btn grape" onClick={() => goTo(1)}>Start the adventure 🚀</button>
+            <button className="btn grape" onClick={() => goTo(1)} disabled={!entered}>⏪ Rewind time to see how</button>
+            {!entered && <span className="muted" style={{ fontWeight: 700 }}>☝️ Say something to Toki first!</span>}
           </div>
           <p className="muted" style={{ marginTop: 18, fontSize: '.95rem' }}>
             Tip: flip <b>🧒 Kid</b> / <b>🔍 Curious</b> at the top for simpler or deeper explanations. Based on Andrej Karpathy's talk “Deep Dive into LLMs like ChatGPT”.

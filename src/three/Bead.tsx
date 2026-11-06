@@ -8,6 +8,7 @@ type Props = {
   color: string
   size?: number
   selected?: boolean
+  dimmed?: boolean
   special?: boolean
   delay?: number
   phase?: number
@@ -15,8 +16,9 @@ type Props = {
 }
 
 // A glossy candy bead that pops in, bobs gently and squishes when tapped.
-export function Bead({ position, color, size = 0.5, selected, special, delay = 0, phase = 0, onClick }: Props) {
+export function Bead({ position, color, size = 0.5, selected, dimmed, special, delay = 0, phase = 0, onClick }: Props) {
   const ref = useRef<THREE.Group>(null)
+  const ring = useRef<THREE.Mesh>(null)
   const born = useRef<number | null>(null)
   const [hover, setHover] = useState(false)
 
@@ -28,11 +30,15 @@ export function Bead({ position, color, size = 0.5, selected, special, delay = 0
     const age = Math.max(0, t - born.current - delay)
     // springy pop-in
     const pop = age <= 0 ? 0 : 1 + Math.exp(-age * 6) * Math.sin(age * 18) * -0.6 * (age < 1.2 ? 1 : 0)
-    const target = (selected ? 1.35 : hover ? 1.15 : 1) * Math.min(1, age * 4) * pop
+    const target = (selected ? 1.5 : hover ? 1.15 : dimmed ? 0.8 : 1) * Math.min(1, age * 4) * pop
     const s = THREE.MathUtils.lerp(g.scale.x, target, 0.25)
     g.scale.setScalar(Math.max(0.0001, s))
     g.position.set(position[0], position[1] + Math.sin(t * 2 + phase) * 0.08 + (selected ? 0.25 : 0), position[2])
-    g.rotation.y = Math.sin(t + phase) * 0.4 + (special ? t : 0)
+    g.rotation.y = selected ? Math.sin(t * 3) * 0.5 : Math.sin(t + phase) * 0.4 + (special ? t : 0)
+    if (ring.current) {
+      ring.current.rotation.z = t * 3
+      ring.current.scale.setScalar(1 + Math.sin(t * 6) * 0.08)
+    }
   })
 
   return (
@@ -46,12 +52,19 @@ export function Bead({ position, color, size = 0.5, selected, special, delay = 0
       {special ? (
         <mesh>
           <octahedronGeometry args={[size * 0.85, 0]} />
-          <meshStandardMaterial color={color} roughness={0.15} metalness={0.3} emissive={color} emissiveIntensity={0.35} flatShading />
+          <meshStandardMaterial color={color} roughness={0.15} metalness={0.3} emissive={color} emissiveIntensity={selected ? 0.8 : 0.35} flatShading transparent opacity={dimmed ? 0.35 : 1} />
         </mesh>
       ) : (
         <RoundedBox args={[size * 1.4, size * 1.4, size * 1.4]} radius={size * 0.5} smoothness={4}>
-          <meshStandardMaterial color={color} roughness={0.25} emissive={color} emissiveIntensity={selected ? 0.35 : 0.08} />
+          <meshStandardMaterial color={color} roughness={0.25} emissive={color} emissiveIntensity={selected ? 0.6 : 0.08} transparent opacity={dimmed ? 0.35 : 1} />
         </RoundedBox>
+      )}
+      {selected && (
+        // glowing halo so a tapped bead is impossible to miss
+        <mesh ref={ring} rotation={[0, 0, 0]}>
+          <torusGeometry args={[size * 1.25, size * 0.12, 12, 48]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffc93c" emissiveIntensity={1.4} />
+        </mesh>
       )}
       {/* glossy highlight */}
       <mesh position={[-size * 0.25, size * 0.3, size * 0.6]}>

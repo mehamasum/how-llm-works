@@ -13,6 +13,13 @@ import { party } from '../ui/confetti'
 import { blip } from '../sound'
 
 const STOPS = CHAPTERS.slice(1, -1)
+type Stop = (typeof STOPS)[number]
+const ahead = (c: Stop) => c.part === 'Looking ahead'
+const GROUPS = [
+  { key: 'past', era: 'past', label: '📼 How Toki was built (months, before you ever chatted)', has: (c: Stop) => c.era === 'past' },
+  { key: 'now', era: 'now', label: '🔴 What happens when you press Enter', has: (c: Stop) => c.era === 'now' && !ahead(c) },
+  { key: 'ahead', era: 'now', label: '🚀 Looking ahead', has: ahead },
+]
 
 function Path({ hover, setHover }: { hover: number; setHover: (i: number) => void }) {
   const { width, height } = useThree((s) => s.viewport)
@@ -25,9 +32,10 @@ function Path({ hover, setHover }: { hover: number; setHover: (i: number) => voi
       const x = (row % 2 ? 2 - col : col) - 1
       return new THREE.Vector3(x * width * 0.3, height * 0.28 - row * (height * 0.66) / Math.ceil(n / 3 - 1), 0)
     }
-    const row = Math.floor(i / 6), col = i % 6
-    const x = (row % 2 ? 5 - col : col) - 2.5
-    return new THREE.Vector3(x * width * 0.155, 1.0 - row * 2.2 + Math.sin(i) * 0.25, 0)
+    const per = Math.ceil(n / 2)
+    const row = Math.floor(i / per), col = i % per
+    const x = (row % 2 ? per - 1 - col : col) - (per - 1) / 2
+    return new THREE.Vector3(x * width * (0.8 / per), 1.0 - row * 2.2 + Math.sin(i) * 0.25, 0)
   })
   const curve = new THREE.CatmullRomCurve3(pts)
   const toki = useRef<THREE.Group>(null)
@@ -86,23 +94,46 @@ export default function Finale() {
         {stop ? <p style={{ margin: 0 }}><b>{stop.emoji} {stop.title}</b>: {stop.short}. <button className="btn small sky" onClick={() => goToId(stop.id)}>Go ▶</button></p>
           : <p className="muted" style={{ margin: 0 }}>Hover or tap the islands to retrace the adventure.</p>}
       </div>
-      <div className="grid-2" style={{ marginTop: 18 }}>
-        <div className="card tilt-l">
-          <h3>🧩 The recipe</h3>
-          <ol style={{ paddingLeft: 22, margin: 0 }}>
-            <li><b>Read the internet</b> and chop it into token beads.</li>
-            <li><b>Play the guessing game</b> billions of times → a page dreamer.</li>
-            <li><b>Practise example chats</b> → a helpful assistant.</li>
-            <li><b>Practise problems</b> and learn from thumbs 👍 → better thinking.</li>
-          </ol>
+      <div className="card story-thread" style={{ marginTop: 18 }}>
+        <h2>🧵 The whole story, in {STOPS.length} big ideas</h2>
+        <p className="muted">Each chapter answered the question the one before it left open. Put together, this is how a chatbot like ChatGPT works:</p>
+        {GROUPS.map((g) => {
+          const items = STOPS.filter(g.has)
+          const start = STOPS.findIndex(g.has) + 1
+          return (
+            <section key={g.key}>
+              <h3 className={`era-tag ${g.era}`} style={{ fontSize: '1rem', marginTop: 14 }}>{g.label}</h3>
+              <ol className="thread" start={start}>
+                {items.map((c) => (
+                  <li key={c.id}>
+                    <button className="thread-item" onClick={() => goToId(c.id)}>
+                      <span className="em">{c.emoji}</span>
+                      <span>{c.lesson}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )
+        })}
+      </div>
+      <div className="card tilt-l" style={{ marginTop: 18 }}>
+        <h3>💬 Your message's journey</h3>
+        <div className="journey">
+          <span className="bubble user">“{sentence}”</span>
+          <span className="arrow">→</span><span className="tag">🍬 chopped into beads</span>
+          <span className="arrow">→</span><span className="tag">🙈 joins the hidden beads</span>
+          <span className="arrow">→</span><span className="tag">🧱 climbs the frozen layers to build a wheel</span>
+          <span className="arrow">→</span><span className="tag">🎡 spin, add a bead, repeat</span>
+          <span className="arrow">→</span><span className="tag">💬 Toki's answer</span>
         </div>
-        <div className="card tilt-r">
-          <h3>🤖 So what is it?</h3>
-          <Explain
-            kid={<p>A chatbot is a giant <b>guess-the-next-bead machine</b> that learned to sound like a kind, helpful person. It's amazing, but it can make things up, so <b>double-check important stuff</b> and use it as a helper, not a boss!</p>}
-            curious={<p>You're talking to a neural network that <b>simulates a helpful labeler</b>, built on a lossy compression of the internet and sharpened by reinforcement learning. Treat it as a powerful tool with jagged edges: verify facts, give it the right context, and use tools for math and lookups.</p>}
-          />
-        </div>
+      </div>
+      <div className="card tilt-r" style={{ marginTop: 18 }}>
+        <h3>🤖 So what are you talking to?</h3>
+        <Explain
+          kid={<p>A giant <b>guess-the-next-bead machine</b>. It read a huge pile of the internet, then practised chats written by kind helpers, then practised problems until it found its own ways to think. It's amazing, but it can make things up and has surprising holes, so <b>double-check important stuff</b> and use it as a helper, not a boss!</p>}
+          curious={<p>A neural network that <b>simulates a helpful labeler</b>: a lossy compression of the internet (pre-training), shaped into an assistant (SFT), and sharpened by reinforcement learning. Each token gets a fixed amount of compute, knowledge is a vague recollection unless it's in the context window, and abilities are jagged. Treat it as a powerful tool: verify facts, give it context, and let it use tools for math and lookups.</p>}
+        />
       </div>
       <div className="card" style={{ marginTop: 18 }}>
         <h3>⭐ Your sticker book ({stickers.length}/{CHAPTERS.length})</h3>
@@ -113,7 +144,6 @@ export default function Finale() {
             </button>
           ))}
         </div>
-        <p className="muted" style={{ marginTop: 10 }}>Remember your sentence? <b>“{sentence}”</b> Now you know every step it goes through. 🎉</p>
         <button className="btn pink" onClick={() => { party(); blip('ding') }}>🎉 Celebrate!</button>
       </div>
     </article>
